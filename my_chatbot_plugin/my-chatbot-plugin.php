@@ -30,11 +30,10 @@ function my_chatbot_render_html() {
                 <p class="chatbot_message">Hi! Welcome to Food Microbiology Academy. How can I help you?</p>
             </div>
             <div id="hot-topic">
-                <div class="question"><span>This is the hot topic</span></div>
-                <div class="question"><span>This is the hot topic</span></div>
-                <div class="question"><span>This is the hot topic</span></div>
-                <div class="question"><span>This is the hot topic</span></div>
-                <div class="question"><span>This is the hot topic</span></div>
+                <div class="question"><span>Our Latest articles</span></div>
+                <div class="question"><a href="https://foodmicrobiology.academy/shop/" style="text-decoration: none; color: inherit;"><span>What trainings available?</span></a></div>
+                <div class="question"><span>Food safety tips</span></div>
+                <div class="question"><a href="https://foodmicrobiology.academy/contact-us-2/" style="text-decoration: none; color: inherit;"><span>Contact Us</span></a></div>
             </div>
             <div class="messages">
                 <p class="user_message">I want to.....</p>
@@ -58,7 +57,9 @@ function my_chatbot_render_html() {
     </div>
     <?php
 }
+
 add_action('wp_footer', 'my_chatbot_render_html');
+
 
 
 
