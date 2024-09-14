@@ -18,5 +18,116 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('my-chatbot-icon').style.visibility = 'visible';
       document.getElementById('my-chatbot-icon').style.opacity = '1';
   });
+
+  document.getElementById('chatbot-send').addEventListener('click',function(){
+    const input = document.getElementById('chatbot-input');
+    const message = input.value;
+    console.log(input.value);
+        if (message) {
+            addMessageToChat(message);
+            input.value = '';
+            sendToExternalAPI(message);
+        }
+  });
+
+  // 修改此函数以调用外部 API
+  function sendToExternalAPI(message) {
+    fetch('https://external-api.example.com/endpoint', { // 将此处替换为外部 API 的 URL
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json', // 根据外部 API 要求选择合适的 Content-Type
+            'Authorization': 'Bearer YOUR_API_TOKEN' // 如果需要认证令牌，请在此处替换为您的 API 令牌
+        },
+        body: JSON.stringify({ content: message }) // 根据外部 API 的要求构造请求体
+    })
+    .then(response => response.json())
+    .then(data => {
+        addMessageToChat(data.reply, false); // 假设 API 返回一个包含回复的 JSON 对象
+    })
+    .catch(error => console.error('Error:', error));
+  }
+  
+  // add message to body
+  function addMessageToChat(message, isUser = true) {
+    const messageContainer = document.createElement('div');
+    messageContainer.className = 'messages';
+
+    const messageElement = document.createElement('p');
+    messageElement.textContent = message;
+    messageElement.className = isUser ? 'user_message' : 'chatbot_message';
+
+    messageContainer.appendChild(messageElement);
+    
+    const chatBody = document.querySelector('.container .body');
+    chatBody.appendChild(messageContainer);
+  }
+  
+  document.getElementById('latest_articles').addEventListener('click',function(){
+    const input = document.getElementById('chatbot-input');
+    const message = input.value;
+    console.log(input.value);
+        if (message) {
+            addMessageToChat(message);
+            input.value = '';
+            sendToExternalAPI(message);
+        }
+  });
+  
+  // document.getElementById('latest_articles').addEventListener('click', function() {
+  //   // 使用 WordPress REST API 获取最近的三篇文章的标题和链接
+  //   fetch('/wp-json/wp/v2/posts?per_page=3&_fields=title,link')
+  //       .then(response => response.json())
+  //       .then(posts => {
+  //           // 遍历文章并显示带有链接的标题
+  //           posts.forEach(post => {
+  //               showLatestArticles(post.title.rendered, post.link);
+  //           });
+  //       })
+  //       .catch(error => console.error('Error fetching articles:', error));
+  // });
+
+  document.getElementById('latest_articles').addEventListener('click', function() {
+    // 发送 AJAX 请求到 WordPress 后台获取最近的文章
+    fetch('https://foodmicrobiology.academy/wp-admin/admin-ajax.php?action=my_get_latest_posts')
+        .then(response => response.json())
+        .then(posts => {
+            // 遍历文章数据并显示带有链接的标题
+            posts.forEach(post => {
+                showLatestArticles(post.title, post.link);
+            });
+        })
+        .catch(error => console.error('Error fetching articles:', error));
+  });
+
+
+ 
+  // show latest articles
+  function showLatestArticles(title, link) {
+    const messageContainer = document.createElement('div');
+    messageContainer.id = 'rec_articles';
+
+    const articleContainer = document.createElement('div');
+    articleContainer.className = 'question';
+
+    // 创建一个 <a> 元素来显示文章标题和链接
+    const messageElement = document.createElement('span');
+    const linkElement = document.createElement('a');
+    linkElement.href = link; // 设置链接地址
+    linkElement.textContent = title; // 设置链接文本为文章标题
+    linkElement.target = '_blank'; // 新标签页打开链接
+
+    // 将链接元素添加到 <p> 元素中
+    messageElement.appendChild(linkElement);
+
+    // 将生成的 <p> 元素添加到消息容器中
+    articleContainer.appendChild(messageElement);
+    messageContainer.appendChild(articleContainer);
+    
+    // 将消息容器添加到聊天内容中
+    const chatBody = document.querySelector('.container .body');
+    chatBody.appendChild(messageContainer);
+  }
+
+
 });
 
