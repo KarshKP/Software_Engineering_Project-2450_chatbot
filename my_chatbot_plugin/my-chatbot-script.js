@@ -99,6 +99,49 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => console.error('Error fetching articles:', error));
   });
 
+  document.getElementById('tips').addEventListener('click', function() {
+    const tips = [
+        "Avoid washing raw chicken.",
+        "Keep cold foods cold, at or below 4 °C.",
+        "Keep hot foods hot, at or above 60 °C.",
+        "Avoid cross contamination - don’t use the same cutting board for different types of food, such as meat and vegetables.",
+        "Avoid cross contamination – don’t use the same cutting board for raw and cooked meat.",
+        "Ensure meat is kept below vegetables and ready to eat food in the fridge.",
+        "Don’t eat undercooked meat.",
+        "Store eggs in the fridge to ensure they are kept at 4 °C or below.",
+        "Don’t be tempted to drink raw milk.",
+        "Wash your dish cloth frequently."
+    ];
+    // Shuffle array and select first three
+    const shuffled = tips.sort(() => 0.5 - Math.random());
+    const selectedTips = shuffled.slice(0, 3);
+
+    let tipsHtml = "<div class='chatbot_message'><strong>Food safety tips:</strong><br><br>"; // Added an extra break after "Tips"
+    selectedTips.forEach((tip, index) => {
+        tipsHtml += `${index + 1}. ${tip}<br><br>`; // Double break line for space between tips
+    });
+    tipsHtml += "</div>";
+
+    const chatBody = document.querySelector('.container .body');
+    chatBody.innerHTML += tipsHtml; // Adds the formatted tips message to the chat
+});
+
+
+// Assuming the addMessageToChat function is like this
+function addMessageToChat(message, isUser = true) {
+    const messageContainer = document.createElement('div');
+    messageContainer.className = isUser ? 'user_message' : 'chatbot_message';
+
+    const messageElement = document.createElement('p');
+    messageElement.textContent = message;
+
+    messageContainer.appendChild(messageElement);
+    
+    const chatBody = document.querySelector('.container .body');
+    chatBody.appendChild(messageContainer);
+}
+
+
 
  
   // show latest articles
@@ -127,6 +170,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatBody = document.querySelector('.container .body');
     chatBody.appendChild(messageContainer);
   }
+
+  
 
 
 });
