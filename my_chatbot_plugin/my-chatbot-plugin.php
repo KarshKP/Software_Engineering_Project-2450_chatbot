@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Chatbot Plugin Final
-Description: A simple chatbot plugin for WordPress with an article recommendation feature.
-Version: 7.0
-Author: Chris Zheng, Danxi Hu, Shashvat Mishra
+Description: A chatbot plugin for WordPress with an article recommendation feature and Q&A feature.
+Version: 8.2
+Author: Chris Zheng, Danxi Hu, Shashvat Mishra,Tenghui Peng, Karsh Patel
 */
 
 // Registering and loading CSS and JS files
@@ -93,79 +93,6 @@ function my_get_latest_posts() {
 add_action('wp_ajax_my_get_latest_posts', 'my_get_latest_posts');
 add_action('wp_ajax_nopriv_my_get_latest_posts', 'my_get_latest_posts');
 
-
-// function my_search_blog_posts() {
-//     $keyword = isset($_POST['query']) ? sanitize_text_field($_POST['query']) : '';
-
-//     if (empty($keyword)) {
-//         wp_send_json_error('No keyword provided');
-//         return;
-//     }
-
-//     $args = array(
-//         's' => $keyword,
-//         'post_type' => 'post',
-//         'post_status' => 'publish',
-//         'numberposts' => 5
-//     );
-
-//     $posts = get_posts($args);
-//     if (!empty($posts)) {
-//         $posts_data = array();
-//         foreach ($posts as $post) {
-//             $posts_data[] = array(
-//                 'title' => $post->post_title,
-//                 'link' => get_permalink($post->ID)
-//             );
-//         }
-
-//         wp_send_json_success($posts_data);
-//         wp_die();
-//     } else {
-//         wp_send_json_error('No posts found');
-//     }
-// }
-
-// function my_search_blog_posts() {
-//     $keyword = isset($_POST['query']) ? sanitize_text_field($_POST['query']) : '';
-
-//     if (empty($keyword)) {
-//         wp_send_json_error('No keyword provided');
-//         return;
-//     }
-
-//     // Custom SQL query to ensure the search matches full words
-//     global $wpdb;
-//     $keyword = $wpdb->esc_like($keyword); // Escape the search term
-
-//     $query = "
-//         SELECT * FROM {$wpdb->posts} 
-//         WHERE post_status = 'publish'
-//         AND post_type = 'post'
-//         AND (post_title RLIKE '[[:<:]]{$keyword}[[:>:]]' 
-//         OR post_content RLIKE '[[:<:]]{$keyword}[[:>:]]')
-//         LIMIT 5
-//     ";
-
-//     // Execute the query
-//     $posts = $wpdb->get_results($query);
-
-//     if (!empty($posts)) {
-//         $posts_data = array();
-//         foreach ($posts as $post) {
-//             $posts_data[] = array(
-//                 'title' => $post->post_title,
-//                 'link' => get_permalink($post->ID)
-//             );
-//         }
-
-//         wp_send_json_success($posts_data);
-//         wp_die();
-//     } else {
-//         wp_send_json_error('No posts found');
-//     }
-// }
-
 function my_search_blog_posts() {
     $keyword = isset($_POST['query']) ? sanitize_text_field($_POST['query']) : '';
 
@@ -239,13 +166,12 @@ function my_search_blog_posts() {
 add_action('wp_ajax_nopriv_my_search_blog_posts', 'my_search_blog_posts');
 add_action('wp_ajax_my_search_blog_posts', 'my_search_blog_posts');
 
-// Register an AJAX handler to get the Q&A from the JSON file
 function my_chatbot_get_answer() {
     // Load the JSON file with Q&A data
     $json_data = file_get_contents(plugin_dir_path(__FILE__) . 'Q&A.json');
     $qa_data = json_decode($json_data, true);
 
-    // Get the user question from the POST request
+    // Get the user question
     $question = isset($_POST['question']) ? sanitize_text_field($_POST['question']) : '';
 
     if (empty($question)) {
@@ -253,17 +179,50 @@ function my_chatbot_get_answer() {
         return;
     }
 
-    // Check if the question exists in the JSON data
-    if (array_key_exists($question, $qa_data)) {
-        $answers = $qa_data[$question];
-        
+    // Convert the question to lowercase
+    $lower_question = strtolower($question);
+    $question_words = explode(' ', $lower_question); // Split the question into words
+
+    // Initialize the highest similarity and the matching question
+    $highest_similarity = 0;
+    $best_match_question = null;
+    $best_match_found = false;
+
+    // Traverse all questions to find the one with the highest similarity
+    foreach ($qa_data as $key => $value) {
+        $key_lower = strtolower($key);
+        $key_words = explode(' ', $key_lower); // Split the key into words
+        $word_matches = 0;
+
+        // Check each word in the question against the key
+        foreach ($question_words as $q_word) {
+            if (in_array($q_word, $key_words)) {
+                $word_matches++;
+            }
+        }
+
+        // Calculate match percentage based on the number of matching words
+        $match_percentage = $word_matches / count($question_words) * 100;
+
+        // Check for the best match based on the percentage of matched words
+        if ($match_percentage > $highest_similarity) {
+            $highest_similarity = $match_percentage;
+            $best_match_question = $key;
+            $best_match_found = true;
+        }
+    }
+
+    // If a match is found that meets the threshold, return the corresponding answer
+    if ($best_match_found && $highest_similarity > 50) { // You can adjust the threshold as needed
+        $answers = $qa_data[$best_match_question];
+
         // If multiple answers are available, randomly select one
         if (is_array($answers)) {
             $random_answer = $answers[array_rand($answers)];
         } else {
             $random_answer = $answers;
         }
-        
+
         wp_send_json_success(array('answer' => $random_answer));
     } else {
         wp_send_json_error('Sorry, I don’t have an answer for that question.');
@@ -271,6 +230,8 @@ function my_chatbot_get_answer() {
 
     wp_die(); // End AJAX request
 }
+
+
 
 // Register the AJAX handler for both logged-in and non-logged-in users
 add_action('wp_ajax_my_chatbot_get_answer', 'my_chatbot_get_answer');
