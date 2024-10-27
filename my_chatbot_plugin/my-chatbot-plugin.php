@@ -2,11 +2,14 @@
 /*
 Plugin Name: Chatbot Plugin Final
 Description: A chatbot plugin for WordPress with an article recommendation feature and Q&A feature.
-Version: 8.2
-Author: Chris Zheng, Danxi Hu, Shashvat Mishra,Tenghui Peng, Karsh Patel
+Version: 9.0
+Author: P000237SE-Blog Website Chatbot Project
 */
 
-// Registering and loading CSS and JS files
+/**
+ * Enqueue the necessary CSS and JavaScript files for the chatbot.
+ * Includes localization for AJAX URL and plugin directory URL for JavaScript use.
+ */
 function chatbot_enqueue_assets() {
     wp_enqueue_style('chatbot-style', plugin_dir_url(__FILE__) . 'chatbot-style.css');
     wp_enqueue_script('chatbot-script', plugin_dir_url(__FILE__) . 'chatbot-script.js', array('jquery'), null, true);
@@ -24,7 +27,10 @@ function chatbot_enqueue_assets() {
 }
 add_action('wp_enqueue_scripts', 'chatbot_enqueue_assets');
 
-// Insert chatbot HTML at the bottom of the page
+/**
+ * Renders the HTML structure for the chatbot interface at the footer.
+ * Displays chatbot icon, main chatbot container, and UI elements.
+ */
 function my_chatbot_render_html() {
     ?>
     <div id="chatbot_icon">
@@ -68,7 +74,10 @@ add_action('wp_footer', 'my_chatbot_render_html');
 
 
 
-// Register an AJAX handler to get the latest posts
+/**
+ * Handles AJAX request to retrieve the latest posts.
+ * Returns the latest three published posts in JSON format.
+ */
 function my_get_latest_posts() {
     // Use WordPress function to get the latest three posts
     $recent_posts = wp_get_recent_posts(array(
@@ -89,72 +98,74 @@ function my_get_latest_posts() {
     wp_die(); // Terminate AJAX request
 }
 
-// Register the function for both logged-in and non-logged-in users
 add_action('wp_ajax_my_get_latest_posts', 'my_get_latest_posts');
 add_action('wp_ajax_nopriv_my_get_latest_posts', 'my_get_latest_posts');
 
+/**
+ * Searches blog posts based on keywords in the title and content.
+ * Uses SQL to match keyword patterns and returns up to five posts.
+ */
 function my_search_blog_posts() {
+    // Get the search keyword from the POST request and sanitize it
     $keyword = isset($_POST['query']) ? sanitize_text_field($_POST['query']) : '';
-
     if (empty($keyword)) {
         wp_send_json_error('No keyword provided');
         return;
     }
 
     global $wpdb;
-
-    // Split the keyword into individual words
     $keywords = explode(' ', $keyword);
-    $keywords = array_filter($keywords); // Remove empty entries, if any
+    $keywords = array_filter($keywords); // Remove invalid characters like spaces
 
-    // Initial search using full keyword
-    $search_patterns = array();
+    // Initialize search conditions and similarity score
+    $search_patterns = [];
+    $similarity_score = "0";  // Initial similarity score is set to 0
 
-    // Full phrase search
-    $search_patterns[] = "[[:<:]]" . $wpdb->esc_like($keyword) . "[[:>:]]";
+    // Search condition for the full keyword in title and its similarity score
+    $full_keyword = $wpdb->esc_like($keyword);
+    $search_patterns[] = "(post_title LIKE '%$full_keyword%')";
+    $similarity_score .= " + (CASE WHEN post_title LIKE '%$full_keyword%' THEN 5 ELSE 0 END)";
 
-    // If the keyword contains multiple words, create reduced patterns
+    // If there are multiple keywords, create conditions for each word
     if (count($keywords) > 1) {
+        // Process multiple word combinations and their similarity scores
         for ($i = 0; $i < count($keywords); $i++) {
             for ($j = count($keywords) - $i; $j >= 2; $j--) {
                 $sub_phrase = implode(' ', array_slice($keywords, $i, $j));
-                $search_patterns[] = "[[:<:]]" . $wpdb->esc_like($sub_phrase) . "[[:>:]]";
+                $sub_phrase = $wpdb->esc_like($sub_phrase);
+                $search_patterns[] = "(post_title LIKE '%$sub_phrase%')";
+                $similarity_score .= " + (CASE WHEN post_title LIKE '%$sub_phrase%' THEN 4 ELSE 0 END)";
             }
         }
-        
+        // Generate search conditions and similarity scores for each individual word
         foreach ($keywords as $word) {
-            $search_patterns[] = "[[:<:]]" . $wpdb->esc_like($word) . "[[:>:]]";
+            $word = $wpdb->esc_like($word);
+            $search_patterns[] = "(post_title LIKE '%$word%')";
+            $similarity_score .= " + (CASE WHEN post_title LIKE '%$word%' THEN 3 ELSE 0 END)";
         }
-        
     }
 
-    // Construct the SQL query to search for these patterns in both title and content
+    // Build SQL query, calculate similarity score, and order by score
     $query = "
-        SELECT * FROM {$wpdb->posts} 
+        SELECT *, (COALESCE($similarity_score, 0)) AS relevance_score
+        FROM {$wpdb->posts}
         WHERE post_status = 'publish'
         AND post_type = 'post'
-        AND (
+        AND (" . implode(' OR ', $search_patterns) . ")
+        ORDER BY relevance_score DESC
+        LIMIT 5
     ";
-
-    $search_conditions = array();
-    foreach ($search_patterns as $pattern) {
-        $search_conditions[] = "(post_title RLIKE '{$pattern}' OR post_content RLIKE '{$pattern}')";
-    }
-
-    $query .= implode(' OR ', $search_conditions) . ") LIMIT 5";
 
     // Execute the query
     $posts = $wpdb->get_results($query);
-
     if (!empty($posts)) {
-        $posts_data = array();
+        $posts_data = [];
         foreach ($posts as $post) {
-            $posts_data[] = array(
+            $posts_data[] = [
                 'title' => $post->post_title,
                 'link' => get_permalink($post->ID)
-            );
+            ];
         }
-
         wp_send_json_success($posts_data);
     } else {
         wp_send_json_error('No posts found');
@@ -163,9 +174,14 @@ function my_search_blog_posts() {
     wp_die();
 }
 
+
 add_action('wp_ajax_nopriv_my_search_blog_posts', 'my_search_blog_posts');
 add_action('wp_ajax_my_search_blog_posts', 'my_search_blog_posts');
 
+/**
+ * Responds to user questions by searching through a Q&A JSON file for matching questions.
+ * Uses word similarity to identify the most relevant answer, returns it in JSON format.
+ */
 function my_chatbot_get_answer() {
     // Load the JSON file with Q&A data
     $json_data = file_get_contents(plugin_dir_path(__FILE__) . 'Q&A.json');
@@ -173,15 +189,14 @@ function my_chatbot_get_answer() {
 
     // Get the user question
     $question = isset($_POST['question']) ? sanitize_text_field($_POST['question']) : '';
-
     if (empty($question)) {
         wp_send_json_error('No question provided');
         return;
     }
-
     // Convert the question to lowercase
     $lower_question = strtolower($question);
-    $question_words = explode(' ', $lower_question); // Split the question into words
+    // Split the question into words
+    $question_words = explode(' ', $lower_question); 
 
     // Initialize the highest similarity and the matching question
     $highest_similarity = 0;
@@ -225,18 +240,19 @@ function my_chatbot_get_answer() {
 
         wp_send_json_success(array('answer' => $random_answer));
     } else {
-        wp_send_json_error('Sorry, I don’t have an answer for that question.');
+        wp_send_json_error('I’m sorry, I didn’t quite understand that. If you need further assistance, please contact us.');
     }
 
     wp_die(); // End AJAX request
 }
 
-
-
-// Register the AJAX handler for both logged-in and non-logged-in users
 add_action('wp_ajax_my_chatbot_get_answer', 'my_chatbot_get_answer');
 add_action('wp_ajax_nopriv_my_chatbot_get_answer', 'my_chatbot_get_answer');
 
+/**
+ * Provides random food safety tips by loading from a Tips JSON file.
+ * Returns three random tips in JSON format.
+ */
 function my_chatbot_get_tips(){
     // Load the JSON file with Tips data
     $json_data = file_get_contents(plugin_dir_path(__FILE__) . 'Tips.json');
@@ -255,7 +271,6 @@ function my_chatbot_get_tips(){
 
 }
 
-// Register the AJAX handler for both logged-in and non-logged-in users
 add_action('wp_ajax_my_chatbot_get_tips', 'my_chatbot_get_tips');
 add_action('wp_ajax_nopriv_my_chatbot_get_tips', 'my_chatbot_get_tips');
 

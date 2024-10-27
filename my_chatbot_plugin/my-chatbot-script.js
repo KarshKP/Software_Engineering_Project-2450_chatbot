@@ -53,22 +53,25 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('return').addEventListener('click', function() {
     document.getElementById('blog_search_container').style.display = 'none';
     document.querySelector('.chatbot_container .chatbot_body').style.display = 'flex';
-    resetSearchFunction(); // Resets the blog search input and results
+    // Resets the blog search input and results
+    resetSearchFunction(); 
   });
 
   // Handle the Enter key press event to trigger the send button
   document.getElementById('chatbot_input').addEventListener('keydown', function(event) {
     if (event.key === 'Enter') {
-        event.preventDefault(); // Prevent the default action of Enter key
-        document.getElementById('chatbot_send').click(); // Trigger the send button click event
+       // Prevent the default action of Enter key
+        event.preventDefault();
+        // Trigger the send button click event
+        document.getElementById('chatbot_send').click(); 
     }
 });
 
 // Function to handle the send button click event
 document.getElementById('chatbot_send').addEventListener('click', function() {
-  const input = document.getElementById('chatbot_input'); // Accesses the text input field where users type messages
-  const originalMessage = input.value.trim();  // Removes any extra spaces from the start and end of the message
-  const message = originalMessage.toLowerCase();  // Converts the message to lowercase for consistent processing
+  const input = document.getElementById('chatbot_input');
+  const originalMessage = input.value.trim();  
+  const message = originalMessage.toLowerCase();
 
   // Splits the message into individual words to facilitate further analysis
   const words = originalMessage.split(/\s+/);
@@ -79,26 +82,33 @@ document.getElementById('chatbot_send').addEventListener('click', function() {
 
   // Checks if the message is not empty before proceeding
   if (originalMessage) {
-      input.value = ''; // Clears the text input field to ready it for the next message
+      input.value = ''; 
 
       // Directs the input to different handling logic depending on whether the blog search is hidden
       handleInput(words, originalMessage, message, isBlogSearchHidden);
   }
 });
-  // Function to fetch and display the latest articles from the server
+  
+
+  /**
+ * Fetches and displays the latest articles from the server.
+ * 
+ * Sends an AJAX request to retrieve recent articles and appends them
+ * to the chatbot's message body, allowing the user to see the latest content.
+ */
   function fetchLatestArticles() {
     // Sends a request to the server to get the latest articles
     fetch(chatbotAjax.ajax_url + '?action=my_get_latest_posts')
-    .then(response => response.json()) // Converts the server's response from JSON format to JavaScript objects
+    .then(response => response.json()) 
     .then(posts => {
       // Creates a container in the UI to display articles
       const articlesContainer = document.createElement('div');
-      articlesContainer.className = 'rec_articles'; // Assigns a CSS class for styling
+      articlesContainer.className = 'rec_articles'; 
       const divtitle=document.createElement('div');
       divtitle.className = 'divtitle';
       const titlespan=document.createElement('span');
       titlespan.className = 'titlespan';
-      titlespan.textContent = 'Latest Articles'; // Sets the title of the articles section
+      titlespan.textContent = 'Latest Articles'; 
       
       // Builds the article container structure
       divtitle.appendChild(titlespan);
@@ -112,29 +122,37 @@ document.getElementById('chatbot_send').addEventListener('click', function() {
       // Appends the complete articles container to the chatbot's body and scrolls to show the newly added content
         const chatBody = document.querySelector('.chatbot_container .chatbot_body');
         chatBody.appendChild(articlesContainer); 
-        chatBody.scrollTop = chatBody.scrollHeight; // Scrolls to the bottom of the chat to show new articles
-
+        chatBody.scrollTop = chatBody.scrollHeight;
     })
-    .catch(error => console.error('Error fetching articles:', error)); // Handles errors if the fetch fails
+    .catch(error => console.error('Error fetching articles:', error)); 
   }
 
  
 
-  // Defines a function to retrieve and display food safety tips from the server
+  /**
+ * Retrieves and displays food safety tips from the server.
+ * 
+ * Initiates an AJAX request to fetch tips and displays them in the chatbot UI.
+ */
   function displayFoodSafetyTips() {
     // Initiates an AJAX request to the server endpoint specified to fetch food safety tips
     fetch(chatbotAjax.ajax_url + '?action=my_chatbot_get_tips')
-      .then(response => response.json()) // Parses the response from the server as JSON
+      .then(response => response.json())
       .then(data => {
-        console.log(data.data.tips); // Outputs the fetched tips to the console for debugging purposes
-          showTips(data.data.tips); // Invokes another function to display these tips in the user interface
+           // Invokes another function to display these tips in the user interface
+          showTips(data.data.tips); 
       })
-      .catch(error => console.error('Error fetching tips:', error)); // Logs errors to the console if the request fails
+      .catch(error => console.error('Error fetching tips:', error)); 
   }
 
 
 
-// Function to initiate and prepare the blog search feature
+/**
+ * Initiates and prepares the blog search feature.
+ * 
+ * Displays the blog search container, hides the regular chat body,
+ * and prompts the user to enter a search keyword.
+ */
 function initiateBlogSearch() {
   // Displays the blog search container by setting its display style to 'flex'
   document.getElementById('blog_search_container').style.display = 'flex'; 
@@ -150,19 +168,22 @@ function initiateBlogSearch() {
 }
 });
 
-  // Function to display user or chatbot messages in the chat
+  /**
+ * Displays a message in the chat, either from the user or the chatbot.
+ * 
+ * @param {string} message - The message text to be displayed.
+ * @param {boolean} [isUser=true] - Indicates if the message is from the user; defaults to true.
+ * @param {boolean} [isSearch=false] - Indicates if the message is part of a blog search result; defaults to false.
+ */
   function addMessageToChat(message, isUser = true, isSearch=false) {
-    // Creates a new div element to contain the message
     const messageContainer = document.createElement('div');
-
-    // Assigns a class to the container based on who is sending the message. 
-    // 'user_message' for user messages, 'chatbot_message' for chatbot responses
-    messageContainer.className = isUser ? 'user_message' : 'chatbot_message'; // Uses different styling depending on the sender
+    // Uses different styling depending on the sender
+    messageContainer.className = isUser ? 'user_message' : 'chatbot_message';
 
     // Creates a span element that will contain the text of the message
     const messageElement = document.createElement('span');
-    messageElement.className="message"; // Assigns a class for styling purposes
-    messageElement.textContent = message; // Sets the text content to the message passed to the function
+    messageElement.className="message";
+    messageElement.textContent = message; 
 
     // Appends the message text to the message container
     messageContainer.appendChild(messageElement);
@@ -183,7 +204,16 @@ function initiateBlogSearch() {
     chatBody.scrollTop = chatBody.scrollHeight;
   }
 
-// This function processes user input and directs it to the appropriate handling based on the UI context and input characteristics
+
+/**
+ * Processes user input and directs it to the appropriate handler.
+ * Determines whether the input should be treated as a blog search or a standard chatbot query.
+ *
+ * @param {Array<string>} words - Array of individual words from the user's input.
+ * @param {string} originalMessage - The original message input from the user.
+ * @param {string} message - The lowercase version of the original message.
+ * @param {boolean} isBlogSearchHidden - Indicates if the blog search mode is currently hidden.
+ */
 function handleInput(words, originalMessage, message, isBlogSearchHidden) {
   // Checks if the blog search is active and if the input consists of 50 words or fewer
   if (!isBlogSearchHidden && words.length <= 50) {  
@@ -203,22 +233,23 @@ function handleInput(words, originalMessage, message, isBlogSearchHidden) {
   function performSpellingCheck(words, originalMessage) {
     // Initializes the Typo.js dictionary with settings for US English
   var dictionary = new Typo("en_US", null, null, {
-    dictionaryPath: typo_vars.dictionaryPath, // Path to dictionary files, configured in WordPress settings
-    asyncLoad: true, // Enables asynchronous loading of the dictionary
-    loadedCallback: function () { // Function called once the dictionary is loaded
-        var incorrectWords = []; // Array to hold words found to be incorrect
-        var correctedWords = [...words];  // Copies the original words array to make corrections
+     // Path to dictionary files, configured in WordPress settings
+    dictionaryPath: typo_vars.dictionaryPath,
+    asyncLoad: true,
+    loadedCallback: function () {
+        var incorrectWords = [];
+        var correctedWords = [...words];
 
         // Iterate over each word in the input to check spelling
         words.forEach(function(word, index) {
-            if (!dictionary.check(word)) { // Checks if the current word is spelled correctly
+            if (!dictionary.check(word)) { 
                 // Retrieves spelling suggestions for any incorrect word
                 let suggestions = dictionary.suggest(word);
                 if (suggestions.length > 0) {
                     // If suggestions are available, replace the incorrect word with the first suggestion
                     correctedWords[index] = suggestions[0];
                 }
-                incorrectWords.push(word); // Adds the incorrect word to the list
+                incorrectWords.push(word);
             }
         });
         
@@ -227,7 +258,7 @@ function handleInput(words, originalMessage, message, isBlogSearchHidden) {
             // Joins the corrected words into a single string
             let correctedMessage = correctedWords.join(' ');
             // If errors were corrected, proceed to handle the corrected input
-            continueWithCorrectedInput(originalMessage,originalMessage);  // Proceed with the corrected input
+            continueWithCorrectedInput(originalMessage,originalMessage);
         } else {
             // If no spelling errors, continue with the original input
             continueWithCorrectedInput(originalMessage,originalMessage);
@@ -236,37 +267,49 @@ function handleInput(words, originalMessage, message, isBlogSearchHidden) {
   });
   }
   
-  // Function to continue processing user input after any spelling corrections have been applied
+  
+  /**
+ * Checks and corrects spelling errors in user input using Typo.js.
+ * 
+ * Loads the Typo.js dictionary asynchronously and provides corrections for any misspelled words.
+ *
+ * 
+ * @param {string} originalMessage - The original message text from the user.
+ * @param {string} message - The text is processed by the system
+ */
   function continueWithCorrectedInput(originalMessage,message) {
-
-    // Displays the user's potentially corrected message in the chat to maintain transparency of what is being processed
-    addMessageToChat(originalMessage); // Indicates that the message is from the user
-
+    addMessageToChat(originalMessage);
     // Sends the processed message to the server to get a response to the user's query or command
     fetchQandA(message);
   }
   
-  // Function to fetch a response from a server-side API based on the user's question
+  /**
+ * Fetches a response from the server's Q&A API based on the user's question.
+ * 
+ * Sends an HTTP POST request to retrieve an answer for the user's question, and
+ * handles the response by displaying the answer or a fallback message.
+ *
+ * @param {string} question - The question entered by the user.
+ */
   function fetchQandA(question) {
-
     // Makes an HTTP POST request to the server with the user's question
     fetch(chatbotAjax.ajax_url, {
     method: 'POST',
     headers: {
-        'Content-Type': 'application/x-www-form-urlencoded', // Specifies the content type as URL-encoded form data
+        'Content-Type': 'application/x-www-form-urlencoded', 
     },
     body: new URLSearchParams({
         action: 'my_chatbot_get_answer', // Specifies the action to be handled by the server
         question: question  // Passes the user's question to the server
     })
   })
-  .then(response => response.json()) // Parses the JSON response from the server
+  .then(response => response.json()) 
   .then(data => {
     // Check if the Q&A response was successful
     if (data.success) {
-        addMessageToChat(data.data.answer, false); // If successful, display the chatbot's response
+        addMessageToChat(data.data.answer, false); 
     } else {
-        addMessageToChat("Sorry, I don't know the answer to that question.", false); // Fallback message if no answer is found
+        addMessageToChat("I’m sorry, I didn’t quite understand that. If you need further assistance, please contact us.", false); 
         showHotTopic(); // Shows main menu options again to guide user to other functionalities
     }
   })
@@ -277,7 +320,13 @@ function handleInput(words, originalMessage, message, isBlogSearchHidden) {
   });
   }
   
-  // Function to display the main menu (hot topic) options again in the chat interface
+  
+  /**
+ * Displays the main menu (hot topic) options in the chat interface.
+ * 
+ * Inserts HTML for clickable options, providing the user with direct access
+ * to key functionalities such as articles, safety tips, and contact options.
+ */
   function showHotTopic(){
     // Defines the HTML structure of the hot topic menu, which includes clickable options for different topics
     const hotTopicHTML = `
@@ -298,7 +347,16 @@ function handleInput(words, originalMessage, message, isBlogSearchHidden) {
     chatbotBody.scrollTop = chatbotBody.scrollHeight; 
   }
   
-  // Function to manage situations where user input is longer than 50 words
+
+  /**
+ * Manages user input that exceeds 50 words.
+ * 
+ * Displays the user's input and provides feedback requesting the user
+ * to shorten their input for easier processing.
+ *
+ * @param {string} originalMessage - The complete message entered by the user.
+ * @param {boolean} isBlogSearchHidden - Indicates if the input is part of a blog search.
+ */
   function handleLongInput(originalMessage, isBlogSearchHidden) {
   if (isBlogSearchHidden) {
     // Displays the user's message in the main chat area because it's not specific to the blog search
@@ -313,7 +371,13 @@ function handleInput(words, originalMessage, message, isBlogSearchHidden) {
   }
   }
 
-   // Display individual articles with title and link
+  /**
+ * Displays an individual article with its title and link in a specified container.
+ *
+ * @param {string} title - The title of the article to display.
+ * @param {string} link - The URL link to the article.
+ * @param {HTMLElement} container - The container element where the article will be appended.
+ */
    function showLatestArticles(title, link, container) {
     const articleContainer = document.createElement('div');
     articleContainer.className = 'articles';
@@ -330,7 +394,11 @@ function handleInput(words, originalMessage, message, isBlogSearchHidden) {
     container.appendChild(articleContainer); // Appends the complete article element to the specified container
   }
 
-    // Function to display selected food safety tips in the chat
+    /**
+ * Displays selected food safety tips in the chatbot interface.
+ *
+ * @param {Array<string>} selectedTips - An array of food safety tips to display.
+ */
     function showTips(selectedTips){
       console.log(selectedTips); // Logs tips data for debugging purposes
         const container=document.createElement('div');
@@ -363,7 +431,15 @@ function handleInput(words, originalMessage, message, isBlogSearchHidden) {
       }
 
       
-  // Function to conduct a blog search based on a user-supplied keyword
+    
+/**
+ * Conducts a blog search using a user-supplied keyword.
+ *
+ * Sends a POST request to the server with the search keyword and
+ * displays the resulting articles in the chatbot's search results area.
+ *
+ * @param {string} keyword - The search keyword entered by the user.
+ */
   function performBlogSearch(keyword) {
     // Initiates a POST request to the server with the search keyword
     fetch(chatbotAjax.ajax_url, {
@@ -383,18 +459,15 @@ function handleInput(words, originalMessage, message, isBlogSearchHidden) {
           // Creates a new container for displaying search results
           const articlesContainer = document.createElement('div');
           articlesContainer.className = 'search_articles_result';
-
            // Adds a title to the search results container
           const divtitle=document.createElement('div');
           divtitle.className = 'divtitle';
           const titlespan=document.createElement('span');
           titlespan.className = 'titlespan';
           titlespan.textContent = 'Search Results'; // Title for the search results section
-          
           // Assembles the title and the container
           divtitle.appendChild(titlespan);
           articlesContainer.appendChild(divtitle);
-
             // Iterates through each search result and adds it to the results container
             data.data.forEach(post => {
                 if (post.title && post.link) {
@@ -404,7 +477,6 @@ function handleInput(words, originalMessage, message, isBlogSearchHidden) {
                     console.error('Post missing title or link:', post); // Logs an error for incomplete data
                 }
             });
-
           // Adds the populated search results container to the chat interface
           const chatBody = document.querySelector('.chatbot_container .search_message');
           chatBody.appendChild(articlesContainer); 
@@ -413,7 +485,6 @@ function handleInput(words, originalMessage, message, isBlogSearchHidden) {
           // Displays an error message if no valid data was found or returned
             addMessageToChat("No articles found or the data format is incorrect.", false,true);
         }
-        
     })
     .catch(error => {
         console.error('Error fetching blog posts:', error);
@@ -425,7 +496,12 @@ function handleInput(words, originalMessage, message, isBlogSearchHidden) {
 
 
 
-// Resets the content of the chatbot body to its default welcome message and menu options
+/**
+ * Resets the content of the chatbot body to the default welcome message and menu options.
+ * 
+ * Updates the main chat area with a welcome message and menu options, giving users
+ * access to key functionalities such as articles, training information, tips, and search.
+ */
 function resetChatbotBody() {
   // Selects the main chat area within the chatbot interface
   const chatBody = document.querySelector('.chatbot_body');
@@ -444,7 +520,11 @@ function resetChatbotBody() {
   `;
 }
 
-// Resets the blog search section to a clean state, ready for new searches
+/**
+ * Resets the blog search section to its initial state, ready for new searches.
+ * 
+ * Clears the current search content and sets up the initial search navigation with a clean message area.
+ */
 function resetSearchFunction(){
   // Selects the container specifically used for blog searches
   const searchBody=document.querySelector('.blog_search_container');
@@ -461,7 +541,11 @@ function resetSearchFunction(){
   rebindSearchEvents(); 
 }
 
-// Rebinds necessary events to elements within the blog search functionality, particularly the return button
+/**
+ * Rebinds events within the blog search interface, particularly for the 'return' button.
+ * 
+ * Adds an event listener to the 'return' button, allowing users to return to the main chat view.
+ */
 function rebindSearchEvents(){
   // Adds an event listener to the 'return' button to handle user clicks, allowing users to exit the search view
   document.getElementById('return').addEventListener('click', function() {
