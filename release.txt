@@ -1,0 +1,42 @@
+Release Version: 1.0.0
+Release Date: 26th October 2024
+
+Project: Food Microbiology Academy Chatbot - Testing Phase Release
+
+Summary:
+This release covers the comprehensive functional and usability testing of the chatbot integration with the Food Microbiology Academy website. All planned test cases have been executed, with a 100% pass rate, ensuring that primary chatbot functionalities meet the required standards.
+
+Details:
+1. **Testing Overview**:
+   - Test Plan Completion: Yes
+   - Total Test Cases Executed: 25+
+   - Total Test Cases Passed: 25+ (100% Pass Rate)
+   - Test Environment: Local development environment, cross-browser testing across major browsers.
+
+2. **Features Tested**:
+   - Chatbot Functionalities:
+     - FAQ Button Accessibility: Ensures users can easily access frequently asked questions and receive accurate responses.
+     - Text Box Limit Notifications: Validates that users receive clear notifications when input exceeds character limits.
+     - Article Recommendation System: Provides users with relevant articles based on input keywords.
+     - Query Handling for Non-Relevant Topics: Ensures the chatbot can redirect users to FAQs when encountering unrecognized topics.
+     - Multi-Server Functionality: Confirms the chatbot performs consistently across different server setups.
+     - Basic Chatbot Conversations: Verifies greeting interactions and general conversation flow to assist users.
+     - Return Button in Blog Search Interface: Validates the user’s ability to easily return to the main chat interface after a blog search.
+     - Frequently Used Topics Module: Automatically displays popular topics at the end of each conversation for user convenience.
+
+   - Cross-Browser Compatibility:
+     - Ensures consistent performance and UI rendering across major browsers, including Chrome, Firefox, Microsoft Edge, and Safari.
+
+
+3. **Results**:
+   - All test cases passed successfully.
+   - No critical issues or bugs identified.
+
+4. **Known Limitations**:
+   - Manual testing was conducted; automated regression testing was not implemented.
+
+5. **Next Steps**:
+   - Performance testing under varying loads.
+   - Preparation for final client handover, including documentation and any necessary training materials.
+
+Released by: [Shashvat Mishra, Test Lead]
